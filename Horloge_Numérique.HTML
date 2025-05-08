@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Horloge Numérique Simple</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(45deg, #2c3e50, #3498db);
+        }
+        
+        .clock-container {
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(5px);
+            text-align: center;
+        }
+        
+        .clock {
+            font-size: 5rem;
+            color: white;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            margin: 10px 0;
+        }
+        
+        .date {
+            font-size: 1.5rem;
+            color: white;
+            opacity: 0.8;
+            margin-bottom: 20px;
+        }
+        
+        .controls button {
+            background-color: rgba(255, 255, 255, 0.3);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            margin: 0 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        
+        .controls button:hover {
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="clock-container">
+        <div class="date" id="date">Mardi 13 Février 2024</div>
+        <div class="clock" id="clock">00:00:00</div>
+        <div class="controls">
+            <button id="format-toggle">Format 24h / 12h</button>
+            <button id="theme-toggle">Changer Thème</button>
+        </div>
+    </div>
+
+    <script>
+        // Fonction pour mettre à jour l'horloge
+        function updateClock() {
+            const now = new Date();
+            
+            // Mettre à jour l'heure
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const seconds = now.getSeconds().toString().padStart(2, '0');
+            
+            document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds}`;
+            
+            // Mettre à jour la date
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const dateString = now.toLocaleDateString('fr-FR', options);
+            document.getElementById('date').textContent = dateString.charAt(0).toUpperCase() + dateString.slice(1);
+        }
+        
+        // Mettre à jour l'horloge chaque seconde
+        updateClock();
+        setInterval(updateClock, 1000);
+        
+        // Toggle format 12h/24h
+        let is24HourFormat = true;
+        document.getElementById('format-toggle').addEventListener('click', function() {
+            is24HourFormat = !is24HourFormat;
+            // Mettre à jour immédiatement l'horloge après changement de format
+            updateClock();
+        });
+        
+        // Toggle thème clair/sombre
+        let isDarkTheme = true;
+        document.getElementById('theme-toggle').addEventListener('click', function() {
+            isDarkTheme = !isDarkTheme;
+            if (isDarkTheme) {
+                document.body.style.background = 'linear-gradient(45deg, #2c3e50, #3498db)';
+            } else {
+                document.body.style.background = 'linear-gradient(45deg, #f8c291, #f6b93b)';
+            }
+        });
+    </script>
+</body>
+</html>
