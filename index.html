@@ -1,0 +1,630 @@
+function changeTheme(theme) {
+    switch(theme) {
+        case 'blue':
+            document.body.style.background = 'linear-gradient(45deg, #2c3e50, #3498db)';
+            break;
+        case 'sunset':
+            document.body.style.background = 'linear-gradient(45deg, #f39c12, #e74c3c)';
+            break;
+        case 'forest':
+            document.body.style.background = 'linear-gradient(45deg, #27ae60, #2ecc71)';
+            break;
+        case 'night':
+            document.body.style.background = 'linear-gradient(45deg, #2c3e50, #8e44ad)';
+            break;
+        case 'ocean':
+            document.body.style.background = 'linear-gradient(45deg, #1abc9c, #3498db)';
+            break;
+        default:
+            document.body.style.background = 'linear-gradient(45deg, #2c3e50, #3498db)';
+    }
+}
+
+// ========== FONCTIONS DU CHRONOMÈTRE ==========
+
+// Fonction pour formater le temps du chronomètre
+function formatStopwatchTime(ms) {
+    const totalCentiseconds = Math.floor(ms / 10);
+    const centiseconds = totalCentiseconds % 100;
+    const totalSeconds = Math.floor(totalCentiseconds / 100);
+    const seconds = totalSeconds % 60;
+    const totalMinutes = Math.floor(totalSeconds / 60);
+    const minutes = totalMinutes % 60;
+    const hours = Math.floor(totalMinutes / 60);
+    
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${centiseconds.toString().padStart(2, '0')}`;
+}
+
+// Fonction pour mettre à jour l'affichage du chronomètre
+function updateStopwatch() {
+    const currentTime = Date.now();
+    const timeElapsed = currentTime - startTime + elapsedTime;
+    document.getElementById('stopwatch').textContent = formatStopwatchTime(timeElapsed);
+}
+
+// Fonction pour démarrer le chronomètre
+function startStopwatch() {
+    if (!isRunning) {
+        startTime = Date.now();
+        stopwatchInterval = setInterval(updateStopwatch, 10);
+        isRunning = true;
+        
+        // Mettre à jour les boutons
+        document.getElementById('start-btn').textContent = 'Arrêter';
+        document.getElementById('lap-btn').disabled = false;
+        document.getElementById('reset-btn').disabled = true;
+        
+        // Ajouter la classe d'animation
+        document.getElementById('stopwatch').classList.add('running');
+    } else {
+        clearInterval(stopwatchInterval);
+        elapsedTime += Date.now() - startTime;
+        isRunning = false;
+        
+        // Mettre à jour les boutons
+        document.getElementById('start-btn').textContent = 'Reprendre';
+        document.getElementById('lap-btn').disabled = true;
+        document.getElementById('reset-btn').disabled = false;
+        
+        // Supprimer la classe d'animation
+        document.getElementById('stopwatch').classList.remove('running');
+    }
+}
+
+// Fonction pour enregistrer un tour
+function recordLap() {
+    if (isRunning) {
+        lapCount++;
+        const currentTime = Date.now() - startTime + elapsedTime;
+        const lapTime = formatStopwatchTime(currentTime);
+        
+        const lapElement = document.createElement('div');
+        lapElement.className = 'lap-item';
+        lapElement.innerHTML = `
+            <span>Tour ${lapCount}</span>
+            <span>${lapTime}</span>
+        `;
+        
+        // Ajouter au début de la liste
+        const lapsContainer = document.getElementById('laps');
+        lapsContainer.insertBefore(lapElement, lapsContainer.firstChild);
+    }
+}
+
+// Fonction pour réinitialiser le chronomètre
+function resetStopwatch() {
+    clearInterval(stopwatchInterval);
+    document.getElementById('stopwatch').textContent = '00:00:00.00';
+    document.getElementById('start-btn').textContent = 'Démarrer';
+    document.getElementById('lap-btn').disabled = true;
+    document.getElementById('reset-btn').disabled = true;
+    document.getElementById('laps').innerHTML = '';
+    
+    elapsedTime = 0;
+    isRunning = false;
+    lapCount = 0;
+}
+
+// ========== FONCTIONS DE L'ALARME ==========
+
+// Fonction pour ajouter une alarme
+function addAlarm() {
+    const hours = parseInt(document.getElementById('alarm-hours').value) || 0;
+    const minutes = parseInt(document.getElementById('alarm-minutes').value) || 0;
+    const seconds = parseInt(document.getElementById('alarm-seconds').value) || 0;
+    
+    // Vérifier si les valeurs sont valides
+    if (hours > 23 || minutes > 59 || seconds > 59) {
+        alert("Veuillez entrer des valeurs d'heure valides!");
+        return;
+    }
+    
+    // Créer un ID unique pour l'alarme
+    const alarmId = Date.now();
+    
+    // Créer un nouvel objet alarme
+    const newAlarm = {
+        id: alarmId,
+        hours: hours,
+        minutes: minutes,
+        seconds: seconds,
+        active: true
+    };
+    
+    // Ajouter l'alarme à la liste
+    alarms.push(newAlarm);
+    
+    // Mettre à jour l'affichage
+    updateAlarmList();
+    
+    // Réinitialiser les champs
+    document.getElementById('alarm-hours').value = '12';
+    document.getElementById('alarm-minutes').value = '00';
+    document.getElementById('alarm-seconds').value = '00';
+}
+
+// Fonction pour mettre à jour la liste des alarmes
+function updateAlarmList() {
+    const alarmList = document.getElementById('alarm-list');
+    
+    // Vider la liste
+    alarmList.innerHTML = '';
+    
+    // Si aucune alarme, afficher un message
+    if (alarms.length === 0) {
+        alarmList.innerHTML = `
+            <div class="alarm-item">
+                <div class="alarm-time">Pas d'alarmes programmées</div>
+            </div>
+        `;
+        return;
+    }
+    
+    // Ajouter chaque alarme à la liste
+    alarms.forEach(alarm => {
+        const alarmItem = document.createElement('div');
+        alarmItem.className = 'alarm-item';
+        
+        const formattedHours = alarm.hours.toString().padStart(2, '0');
+        const formattedMinutes = alarm.minutes.toString().padStart(2, '0');
+        const formattedSeconds = alarm.seconds.toString().padStart(2, '0');
+        
+        alarmItem.innerHTML = `
+            <div class="alarm-time">${formattedHours}:${formattedMinutes}:${formattedSeconds}</div>
+            <div class="alarm-status">
+                <div class="alarm-toggle ${alarm.active ? 'active' : ''}" onclick="toggleAlarm(${alarm.id})"></div>
+                <button class="delete-alarm" onclick="deleteAlarm(${alarm.id})">×</button>
+            </div>
+        `;
+        
+        alarmList.appendChild(alarmItem);
+    });
+}
+
+// Fonction pour activer/désactiver une alarme
+function toggleAlarm(id) {
+    const alarmIndex = alarms.findIndex(alarm => alarm.id === id);
+    if (alarmIndex !== -1) {
+        alarms[alarmIndex].active = !alarms[alarmIndex].active;
+        updateAlarmList();
+    }
+}
+
+// Fonction pour supprimer une alarme
+function deleteAlarm(id) {
+    alarms = alarms.filter(alarm => alarm.id !== id);
+    updateAlarmList();
+}
+
+// Fonction pour supprimer toutes les alarmes
+function clearAllAlarms() {
+    alarms = [];
+    updateAlarmList();
+}
+
+// Fonction pour vérifier si une alarme doit sonner
+function checkAlarms(hours, minutes, seconds) {
+    alarms.forEach(alarm => {
+        if (alarm.active && 
+            alarm.hours === hours && 
+            alarm.minutes === minutes && 
+            alarm.seconds === seconds) {
+            triggerAlarm(alarm);
+        }
+    });
+}
+
+// Fonction pour déclencher l'alarme
+function triggerAlarm(alarm) {
+    // Afficher l'alerte
+    document.getElementById('alarm-alert').style.display = 'flex';
+    
+    // Faire jouer le son
+    playAlarmSound();
+    
+    // Faire vibrer (si disponible)
+    if ('vibrate' in navigator) {
+        navigator.vibrate([300, 100, 300, 100, 300]);
+    }
+}
+
+// Fonction pour arrêter l'alarme
+function stopAlarm() {
+    document.getElementById('alarm-alert').style.display = 'none';
+    stopAlarmSound();
+}
+
+// Fonction pour jouer le son d'alarme
+function playAlarmSound() {
+    try {
+        // Créer un contexte audio
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioContext = new AudioContext();
+        
+        // Utiliser un oscillateur pour générer un son de type "bip"
+        alarmSound = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        alarmSound.type = 'square';
+        alarmSound.frequency.value = 800;
+        gainNode.gain.value = 0.2;
+        
+        alarmSound.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        // Démarrer le son avec un motif d'alarme
+        alarmSound.start();
+        
+        // Créer un motif de son (bip-bip-bip)
+        let isOn = true;
+        alarmCheckInterval = setInterval(() => {
+            isOn = !isOn;
+            gainNode.gain.value = isOn ? 0.2 : 0;
+        }, 300);
+    } catch (error) {
+        console.error("Erreur lors de la lecture du son d'alarme:", error);
+    }
+}
+
+// Fonction pour arrêter le son d'alarme
+function stopAlarmSound() {
+    if (alarmSound) {
+        try {
+            alarmSound.stop();
+            clearInterval(alarmCheckInterval);
+        } catch (error) {
+            console.error("Erreur lors de l'arrêt du son d'alarme:", error);
+        }
+    }
+}
+
+// ========== FONCTIONS DU MINUTEUR ==========
+
+// Fonction pour formater le temps (mm:ss)
+function formatTime(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+}
+
+// Fonction pour mettre à jour l'affichage du minuteur
+function updateTimerDisplay() {
+    document.getElementById('timer-time').textContent = formatTime(timerRemaining);
+    
+    // Mettre à jour la progression visuelle
+    const progress = (timerDuration - timerRemaining) / timerDuration * 100;
+    document.getElementById('timer-progress').style.background = 
+        `conic-gradient(rgba(46, 204, 113, 0.8) 0%, rgba(46, 204, 113, 0.8) ${progress}%, transparent ${progress}%, transparent 100%)`;
+    
+    // Si le minuteur est terminé
+    if (timerRemaining <= 0) {
+        clearInterval(timerInterval);
+        timerRunning = false;
+        document.getElementById('timer-circle').classList.add('timer-end');
+        document.getElementById('timer-start-btn').disabled = true;
+        document.getElementById('timer-pause-btn').disabled = true;
+        document.getElementById('timer-reset-btn').disabled = false;
+        
+        // Jouer le son de fin
+        playEndSound();
+    }
+}
+
+// Fonction pour démarrer le minuteur
+function startTimer() {
+    if (timerRunning) return;
+    
+    timerRunning = true;
+    
+    // Mettre à jour les boutons
+    document.getElementById('timer-start-btn').disabled = true;
+    document.getElementById('timer-pause-btn').disabled = false;
+    document.getElementById('timer-reset-btn').disabled = false;
+    
+    // Démarrer le minuteur
+    timerInterval = setInterval(() => {
+        timerRemaining--;
+        updateTimerDisplay();
+        
+        if (timerRemaining <= 0) {
+            clearInterval(timerInterval);
+        }
+    }, 1000);
+}
+
+// Fonction pour mettre en pause le minuteur
+function pauseTimer() {
+    if (!timerRunning) return;
+    
+    timerRunning = false;
+    clearInterval(timerInterval);
+    
+    // Mettre à jour les boutons
+    document.getElementById('timer-start-btn').disabled = false;
+    document.getElementById('timer-pause-btn').disabled = true;
+    document.getElementById('timer-reset-btn').disabled = false;
+}
+
+// Fonction pour réinitialiser le minuteur
+function resetTimer() {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    timerRemaining = timerDuration;
+    updateTimerDisplay();
+    
+    // Réinitialiser l'animation
+    document.getElementById('timer-circle').classList.remove('timer-end');
+    
+    // Mettre à jour les boutons
+    document.getElementById('timer-start-btn').disabled = false;
+    document.getElementById('timer-pause-btn').disabled = true;
+    document.getElementById('timer-reset-btn').disabled = true;
+}
+
+// Fonction pour définir la durée du minuteur
+function setTimerDuration(minutes) {
+    pauseTimer();
+    timerDuration = minutes * 60;
+    timerRemaining = timerDuration;
+    updateTimerDisplay();
+    resetTimer();
+    
+    // Mettre à jour les boutons préréglés
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelector(`.preset-btn[data-minutes="${minutes}"]`).classList.add('active');
+}
+
+// Fonction pour jouer un son d'ambiance
+function playAmbientSound(sound) {
+    // Arrêter le son précédent
+    if (ambientSound) {
+        try {
+            ambientSound.stop();
+            ambientSound = null;
+        } catch (error) {
+            console.error("Erreur lors de l'arrêt du son d'ambiance:", error);
+        }
+    }
+    
+    if (sound === 'none') return;
+    
+    try {
+        // Initialiser l'API Audio si nécessaire
+        if (!audioContext) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            audioContext = new AudioContext();
+        }
+        
+        // Créer un oscillateur pour simuler des sons d'ambiance
+        ambientSound = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        // Configurer le son selon le type
+        switch(sound) {
+            case 'rain':
+                // Simulation de pluie avec un bruit blanc filtré
+                ambientSound.type = 'triangle';
+                ambientSound.frequency.value = 100;
+                gainNode.gain.value = 0.05;
+                break;
+            case 'forest':
+                // Simulation de forêt avec un son plus grave
+                ambientSound.type = 'triangle';
+                ambientSound.frequency.value = 150;
+                gainNode.gain.value = 0.02;
+                break;
+            case 'waves':
+                // Simulation de vagues avec un son plus ondulant
+                ambientSound.type = 'sine';
+                ambientSound.frequency.value = 200;
+                gainNode.gain.value = 0.03;
+                
+                // LFO pour simuler le mouvement des vagues
+                const lfo = audioContext.createOscillator();
+                lfo.frequency.value = 0.2;
+                const lfoGain = audioContext.createGain();
+                lfoGain.gain.value = 50;
+                lfo.connect(lfoGain);
+                lfoGain.connect(ambientSound.frequency);
+                lfo.start();
+                break;
+        }
+        
+        ambientSound.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        ambientSound.start();
+    } catch (error) {
+        console.error("Erreur lors de la lecture du son d'ambiance:", error);
+    }
+    
+    // Mettre à jour les boutons de son
+    document.querySelectorAll('.sound-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelector(`.sound-btn[data-sound="${sound}"]`).classList.add('active');
+}
+
+// Fonction pour jouer le son de fin
+function playEndSound() {
+    try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const context = new AudioContext();
+        
+        // Créer un son de "ding"
+        const oscillator = context.createOscillator();
+        const gainNode = context.createGain();
+        
+        oscillator.type = 'sine';
+        oscillator.frequency.value = 800;
+        gainNode.gain.setValueAtTime(0, context.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.5, context.currentTime + 0.1);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, context.currentTime + 1.5);
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(context.destination);
+        
+        oscillator.start(context.currentTime);
+        oscillator.stop(context.currentTime + 1.5);
+    } catch (error) {
+        console.error("Erreur lors de la lecture du son de fin:", error);
+    }
+}
+
+// ========== FONCTIONS GÉNÉRALES ==========
+
+// Fonction pour basculer entre les onglets
+function switchTab(tab) {
+    const tabs = document.querySelectorAll('.tab');
+    tabs.forEach(t => t.classList.remove('active'));
+    
+    document.getElementById('clock-tab').style.display = 'none';
+    document.getElementById('stopwatch-tab').style.display = 'none';
+    document.getElementById('alarm-tab').style.display = 'none';
+    document.getElementById('timer-tab').style.display = 'none';
+    
+    if (tab === 'clock') {
+        document.getElementById('clock-tab').style.display = 'block';
+        document.querySelector('.tab:nth-child(1)').classList.add('active');
+    } else if (tab === 'stopwatch') {
+        document.getElementById('stopwatch-tab').style.display = 'block';
+        document.querySelector('.tab:nth-child(2)').classList.add('active');
+    } else if (tab === 'alarm') {
+        document.getElementById('alarm-tab').style.display = 'block';
+        document.querySelector('.tab:nth-child(3)').classList.add('active');
+    } else if (tab === 'timer') {
+        document.getElementById('timer-tab').style.display = 'block';
+        document.querySelector('.tab:nth-child(4)').classList.add('active');
+    }
+}
+
+// Fonction pour créer des bulles d'animation en arrière-plan
+function createBubbles() {
+    const dynamicBg = document.createElement('div');
+    dynamicBg.className = 'dynamic-bg';
+    document.body.appendChild(dynamicBg);
+    
+    for (let i = 0; i < 15; i++) {
+        const bubble = document.createElement('div');
+        bubble.className = 'bg-bubble';
+        
+        // Taille aléatoire
+        const size = Math.random() * 200 + 50;
+        bubble.style.width = `${size}px`;
+        bubble.style.height = `${size}px`;
+        
+        // Position aléatoire
+        bubble.style.left = `${Math.random() * 100}%`;
+        bubble.style.top = `${Math.random() * 100}%`;
+        
+        // Durée et délai d'animation aléatoires
+        const duration = Math.random() * 20 + 10;
+        const delay = Math.random() * 5;
+        bubble.style.animationDuration = `${duration}s`;
+        bubble.style.animationDelay = `${delay}s`;
+        
+        dynamicBg.appendChild(bubble);
+    }
+}
+
+// ========== INITIALISATION ET EVENT LISTENERS ==========
+
+// Fonction appelée au chargement de la page
+window.addEventListener('load', function() {
+    // Mettre à jour l'horloge numérique chaque seconde
+    updateClock();
+    setInterval(updateClock, 1000);
+    
+    // Mettre à jour l'horloge analogique chaque seconde
+    updateAnalogClock();
+    setInterval(updateAnalogClock, 1000);
+    
+    // Initialiser l'affichage du minuteur
+    updateTimerDisplay();
+    
+    // Créer les bulles d'arrière-plan
+    createBubbles();
+    
+    // --- Event listeners pour l'HORLOGE ---
+    
+    // Format 12h/24h
+    document.getElementById('format-toggle').addEventListener('click', function() {
+        is24HourFormat = !is24HourFormat;
+        updateClock();
+    });
+    
+    // Basculer entre horloge numérique et analogique
+    document.getElementById('digital-btn').addEventListener('click', function() {
+        toggleClockMode('digital');
+    });
+    
+    document.getElementById('analog-btn').addEventListener('click', function() {
+        toggleClockMode('analog');
+    });
+    
+    // Thèmes
+    document.querySelectorAll('.theme-option').forEach(option => {
+        option.addEventListener('click', function() {
+            const theme = this.getAttribute('data-theme');
+            changeTheme(theme);
+        });
+    });
+    
+    // --- Event listeners pour le CHRONOMÈTRE ---
+    document.getElementById('start-btn').addEventListener('click', startStopwatch);
+    document.getElementById('lap-btn').addEventListener('click', recordLap);
+    document.getElementById('reset-btn').addEventListener('click', resetStopwatch);
+    
+    // --- Event listeners pour l'ALARME ---
+    document.getElementById('set-alarm-btn').addEventListener('click', addAlarm);
+    document.getElementById('clear-all-alarms-btn').addEventListener('click', clearAllAlarms);
+    document.getElementById('stop-alarm-btn').addEventListener('click', stopAlarm);
+    
+    // Limiter les champs d'entrée de l'alarme
+    document.getElementById('alarm-hours').addEventListener('input', function() {
+        if (this.value > 23) this.value = 23;
+        if (this.value < 0) this.value = 0;
+    });
+    
+    document.getElementById('alarm-minutes').addEventListener('input', function() {
+        if (this.value > 59) this.value = 59;
+        if (this.value < 0) this.value = 0;
+    });
+    
+    document.getElementById('alarm-seconds').addEventListener('input', function() {
+        if (this.value > 59) this.value = 59;
+        if (this.value < 0) this.value = 0;
+    });
+    
+    // --- Event listeners pour le MINUTEUR ---
+    document.getElementById('timer-start-btn').addEventListener('click', startTimer);
+    document.getElementById('timer-pause-btn').addEventListener('click', pauseTimer);
+    document.getElementById('timer-reset-btn').addEventListener('click', resetTimer);
+    
+    // Event listeners pour les boutons préréglés
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const minutes = parseInt(this.getAttribute('data-minutes'));
+            setTimerDuration(minutes);
+        });
+    });
+    
+    // Event listeners pour les boutons de son
+    document.querySelectorAll('.sound-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const sound = this.getAttribute('data-sound');
+            playAmbientSound(sound);
+        });
+    });
+    
+    // Définir le préréglage par défaut
+    try {
+        document.querySelector('.preset-btn[data-minutes="25"]').classList.add('active');
+    } catch (error) {
+        console.error("Préréglage par défaut non trouvé:", error);
+    }
+});
+</script>
+</body>
+</html>
